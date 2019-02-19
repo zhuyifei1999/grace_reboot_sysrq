@@ -1,6 +1,6 @@
 /*
- * Gracefully reboot with a magic sysrq key -- REISUB replacement
- * Copyright (C) 2018  zhuyifei1999
+ * Orderly reboot with a magic sysrq key -- REISUB replacement (sometimes)
+ * Copyright (C) 2018-2019 YiFei Zhu 
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -24,36 +24,27 @@
 MODULE_LICENSE( "GPL" );
 
 #include <linux/sysrq.h>
-#include <linux/workqueue.h>
-#include <linux/umh.h>
-
-static void work_handler(struct work_struct *ignored) {
-    // char *argv[] = {"/usr/bin/logger", "test", NULL};
-    char *argv[] = {"/sbin/reboot", NULL};
-    char *envp[] = {"HOME=/", "TERM=linux", "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL};
-    WARN_ON(call_usermodehelper(argv[0], argv, envp, UMH_WAIT_PROC));
-}
-static DECLARE_WORK(work, work_handler);
+#include <linux/reboot.h>
 
 
 static void sysrq_handler(int key) {
-    schedule_work(&work);
+    orderly_reboot();
 }
 
 static struct sysrq_key_op sysrq_op = {
     .handler = &sysrq_handler,
-    .help_msg = "grace-reboot(x)",
-    .action_msg = "Gracefully reboot via user space",
+    .help_msg = "orderly-reboot(x)",
+    .action_msg = "Orderly reboot via user space",
     .enable_mask = SYSRQ_ENABLE_BOOT,
 };
 
 
-static int grace_reboot_init(void) {
+static int orderly_reboot_init(void) {
     return register_sysrq_key('x', &sysrq_op);
 }
-static void grace_reboot_exit(void) {
+static void orderly_reboot_exit(void) {
     WARN_ON(unregister_sysrq_key('x', &sysrq_op));
 }
 
-module_init(grace_reboot_init);
-module_exit(grace_reboot_exit);
+module_init(orderly_reboot_init);
+module_exit(orderly_reboot_exit);

@@ -1,4 +1,4 @@
-obj-m := grace_reboot_sysrq.o
+obj-m := orderly_reboot_sysrq.o
 
 KVER ?= $(shell uname -r)
 KDIR ?= /lib/modules/$(KVER)/build
